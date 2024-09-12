@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>☼ Plainstext</title>
+    <title>Plainstext Scryfall Search</title>
 
-    <!-- Minimal CSS Reset, Basic Styling -->
+    <!-- Basic Reset and Minimal Styling -->
     <style>
         * {
             margin: 0;
@@ -41,6 +41,7 @@
         a {
             color: blue;
             text-decoration: underline;
+            cursor: pointer;
         }
         .full-card {
             margin-top: 20px;
@@ -57,7 +58,7 @@
 </head>
 <body>
 
-    <h1>Scryfall Search (Brutalist Style)</h1>
+    <h1>Plainstext Scryfall Search</h1>
 
     <!-- Search form -->
     <label for="search">Enter Search Query:</label>
@@ -70,7 +71,7 @@
     <!-- Dedicated card view (rendered dynamically) -->
     <div id="cardPage"></div>
 
-    <!-- Vanilla JS for routing and interaction -->
+    <!-- Vanilla JS for Routing and Search -->
     <script>
         const searchBtn = document.getElementById('searchBtn');
         const cardList = document.getElementById('cardList');
@@ -99,9 +100,9 @@
                             cardPreview.className = 'card-preview';
                             const cardSlug = generateSlug(card.name);
 
-                            // Link to open the card's dedicated page
+                            // Link to open the card's dedicated page using hash-based routing
                             cardPreview.innerHTML = `
-                                <a href="/#${cardSlug}" target="_blank">${card.name}</a>
+                                <a href="#${cardSlug}">${card.name}</a>
                             `;
                             cardList.appendChild(cardPreview);
                         });
@@ -131,8 +132,11 @@
             const hash = window.location.hash.substring(1); // Get the slug from the URL
             if (!hash) return;
 
-            // Search the card by its slug
-            fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(hash.replace(/-/g, ' '))}`)
+            // Convert the slug back to the card name format for API request
+            const cardName = hash.replace(/-/g, ' ');
+
+            // Search the card by its name
+            fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}`)
                 .then(response => response.json())
                 .then(card => {
                     cardPage.innerHTML = ''; // Clear previous content
