@@ -1,286 +1,379 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plainstext Scryfall Search</title>
-
-    <!-- Favicon with goldenrod sun character -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀︎</text></svg>">
-
-    <!-- Basic Reset and Minimal Styling -->
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Verdana, Geneva, sans-serif;
-            line-height: 1.5;
-            padding: 20px;
-            background-color: white;
-            color: black;
-            max-width: 100%;
-        }
-        h1, label, button {
-            display: block;
-            margin-bottom: 10px;
-        }
-        button {
-            margin-top: 10px;
-            cursor: pointer;
-        }
-        input {
-            margin-bottom: 10px;
-            padding: 5px;
-            width: 100%;
-            max-width: 25ch;
-        }
-        ul {
-            list-style-type: none;
-            margin-top: 20px;
-        }
-        .card-preview {
-            margin-bottom: 5px;
-            padding: 10px;
-            cursor: pointer;
-        }
-        #homelink {
-            text-decoration: none;
-            color: goldenrod;
-        }
-        .highlighted {
-            background-color: #d3d3d3;
-        }
-        summary {
-            cursor: pointer;
-            font-weight: regular;
-        }
-        details {
-            margin-bottom: 10px;
-        }
-        .full-card {
-            margin-top: 10px;
-            padding: 10px;
-            border-top: 1px solid black;
-        }
-        .copy-button {
-            padding: 5px;
-            margin-top: 10px;
-            display: block;
-            cursor: pointer;
-        }
-        a {
-            color: blue;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-
-    <h1><a id="homelink" href="index.html">☀︎</a> Plainstext – text-based MTG search</h1>
-
-    <!-- Search form -->
-    <label for="search">Search for cards:</label>
-    <input type="text" id="search" placeholder="Search cards...">
-    <button id="searchBtn">Search</button>
-
-    <!-- Display results -->
-    <ul id="cardList"></ul>
-
-    <!-- Vanilla JS for Routing and Search -->
-    <script>
-        const searchBtn = document.getElementById('searchBtn');
-        const searchInput = document.getElementById('search');
-        const cardList = document.getElementById('cardList');
-        let selectedCardIndex = -1;
-        let detailsElements = []; // To store all open details
-
-        // Helper function to generate query string for permalink
-        function generateQueryString(params) {
-            return Object.keys(params)
-                .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
-                .join('&');
-        }
-
-        // Function to get parameters from URL
-        function getURLParams() {
-            const params = {};
-            const search = window.location.search.substring(1);
-            if (search) {
-                search.split('&').forEach(param => {
-                    const [key, value] = param.split('=');
-                    params[decodeURIComponent(key)] = decodeURIComponent(value);
-                });
-            }
-            return params;
-        }
-
-        // Close all open <details> elements except the one that is newly opened
-        function closeAllDetails(exceptIndex = null) {
-            detailsElements.forEach((details, index) => {
-                if (index !== exceptIndex) {
-                    details.open = false;
-                }
-            });
-        }
-
-        // Search for cards (with additional attributes like name, type, cmc)
-        function performSearch(query) {
-            // If no query passed, use search input value
-            const queryParams = query || { name: searchInput.value };
-            if (!queryParams.name) {
-                alert('Please enter a search term.');
-                return;
-            }
-
-            // Construct the query string for Scryfall search API
-            let scryfallQuery = queryParams.name;
-            if (queryParams.type) scryfallQuery += ` t:${queryParams.type}`;
-            if (queryParams.cmc) scryfallQuery += ` cmc=${queryParams.cmc}`;
-
-            // Fetch data from Scryfall API
-            fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(scryfallQuery)}`)
-                .then(response => response.json())
-                .then(data => {
-                    cardList.innerHTML = ''; // Clear previous results
-                    detailsElements = []; // Clear previous details elements
-                    selectedCardIndex = -1;
-
-                    if (data.data && data.data.length > 0) {
-                        data.data.forEach((card, index) => {
-                            const cardSlug = generateQueryString({
-                                name: card.name,
-                                type: card.type_line,
-                                cmc: card.cmc
-                            });
-
-                            // Create the details + summary structure for each card
-                            const detailsElement = document.createElement('details');
-                            const summaryElement = document.createElement('summary');
-                            summaryElement.innerHTML = `
-                                <strong>${card.name}</strong> - ${card.mana_cost || 'None'} | ${card.type_line} | ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}
-                                <a href="?${cardSlug}" target="_blank" style="float: right;">↗︎</a>
-                            `;
-
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Plainstext Scryfall Search</title>
+      <!-- Favicon with goldenrod sun character -->
+      <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀︎</text></svg>">
+      <!-- Basic Reset and Minimal Styling -->
+      <style>
+         * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+         }
+         body {
+         font-family: Verdana, Geneva, sans-serif;
+         line-height: 1.5;
+         padding: 20px;
+         background-color: white;
+         color: black;
+         max-width: 100%;
+         }
+         label, button {
+         display: block;
+         margin-bottom: 10px;
+         }
+         button {
+         padding: 5px;
+         cursor: pointer;
+         }
+         input {
+         margin-bottom: 10px;
+         padding: 5px;
+         width: 100%;
+         max-width: 25ch;
+         }
+         #search-wrapper {
+         display: flex;
+         align-items: center;
+         }
+         ul {
+         list-style-type: none;
+         margin-top: 20px;
+         }
+         .card-preview {
+         margin-bottom: 5px;
+         padding: 10px;
+         cursor: pointer;
+         }
+         h1 {
+         margin-bottom: 0;
+         margin-block-end: -0.6rem;
+         }
+         #homelink {
+         text-decoration: none;
+         color: goldenrod;
+         }
+         .highlighted {
+         background-color: #d3d3d3;
+         }
+         summary {
+         cursor: pointer;
+         font-weight: regular;
+         }
+         details {
+         margin-bottom: 10px;
+         }
+         .full-card {
+         margin-top: 10px;
+         padding: 10px;
+         border-top: 1px solid black;
+         white-space: pre-wrap; /* Preserve line breaks and white spaces */
+         }
+         .copy-button {
+         padding: 5px;
+         margin-top: 10px;
+         display: block;
+         cursor: pointer;
+         }
+         a {
+         color: blue;
+         text-decoration: none;
+         }
+         a:hover {
+         text-decoration: underline;
+         }
+         #search-wrapper {
+         display: flex;
+         align-items: center;
+         gap: 10px; /* Adds space between the input, search, and random buttons */
+         }
+         #button-bar {
+         display: flex;
+         flex-direction: row;
+         gap: 1em;
+         }
+         #searchBtn, #randomBtn {
+         margin-top: 0; /* Reset margin to ensure both buttons align vertically */
+         }
+         #cont {
+         display: flex;
+         flex-direction: row;
+         }
+         #bar {
+         margin-bottom: 2em;
+         margin-top: 1em;
+         color:beige;
+         }
+         #desc {
+         margin-top: 0;
+         margin-left: 2.9rem;
+         font-style: italic;
+         color: #999;
+         line-height: 1;
+         margin-bottom: 3rem;
+         }
+         #spacer {
+         margin-top: 2rem;
+         }
+         .full-card {
+         margin-top: 10px;
+         padding: 10px;
+         border-top: 1px solid black;
+         white-space: pre-wrap; /* Preserve line breaks and white spaces */
+         word-wrap: break-word; /* Prevent long unbroken words from causing layout issues */
+         }
+         .details-content {
+         margin-top: 10px;
+         font-size: 0.9em;
+         }
+      </style>
+   </head>
+   <body>
+      <h1><a id="homelink" alt="plain-text mtg search" href="index.html">☀︎</a> Plainstext</h1>
+      <small id="desc">plain-text mtg search</small>
+      <!-- Search form with Random Card feature -->
+      <div id="spacer"></div>
+      <label for="search">Search for cards:</label>
+      <div id="button-bar">
+         <input type="text" id="search" placeholder="Search cards...">
+         <button id="searchBtn">Search</button>
+         <button id="randomBtn">Random</button>
+      </div>
+      <!-- Display results -->
+      <ul id="cardList"></ul>
+      <!-- Vanilla JS for Routing and Search -->
+      <script>
+         const searchBtn = document.getElementById('searchBtn');
+         const randomBtn = document.getElementById('randomBtn');
+         const searchInput = document.getElementById('search');
+         const cardList = document.getElementById('cardList');
+         let selectedCardIndex = -1;
+         let detailsElements = []; // To store all open details
+         
+         // Helper function to generate query string for permalink
+         function generateQueryString(params) {
+             return Object.keys(params)
+                 .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+                 .join('&');
+         }
+         
+         // Function to get parameters from URL
+         function getURLParams() {
+             const params = {};
+             const search = window.location.search.substring(1);
+             if (search) {
+                 search.split('&').forEach(param => {
+                     const [key, value] = param.split('=');
+                     params[decodeURIComponent(key)] = decodeURIComponent(value);
+                 });
+             }
+             return params;
+         }
+         
+         // Close all open <details> elements except the one that is newly opened
+         function closeAllDetails(exceptIndex = null) {
+             detailsElements.forEach((details, index) => {
+                 if (index !== exceptIndex) {
+                     details.open = false;
+                 }
+             });
+         }
+         
+         // Random Card Feature
+         randomBtn.addEventListener('click', () => {
+             fetch('https://api.scryfall.com/cards/random')
+                 .then(response => response.json())
+                 .then(card => {
+                     const cardSlug = generateQueryString({
+                         name: card.name,
+                         type: card.type_line,
+                         cmc: card.cmc
+                     });
+                     const permalink = window.location.origin + window.location.pathname + '?' + cardSlug;
+                     window.open(permalink, '_blank'); // Open the random card permalink in a new tab
+                 })
+                 .catch(error => {
+                     console.error('Error fetching random card:', error);
+                     alert('Error fetching random card.');
+                 });
+         });
+         
+         // Search for cards (with additional attributes like name, type, cmc)
+         function performSearch(query) {
+             // If no query passed, use search input value
+             const queryParams = query || { name: searchInput.value };
+             if (!queryParams.name) {
+                 alert('Please enter a search term.');
+                 return;
+             }
+         
+             // Construct the query string for Scryfall search API
+             let scryfallQuery = queryParams.name;
+             if (queryParams.type) scryfallQuery += ` t:${queryParams.type}`;
+             if (queryParams.cmc) scryfallQuery += ` cmc=${queryParams.cmc}`;
+         
+             // Fetch data from Scryfall API
+             fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(scryfallQuery)}`)
+                 .then(response => response.json())
+                 .then(data => {
+                     cardList.innerHTML = ''; // Clear previous results
+                     detailsElements = []; // Clear previous details elements
+                     selectedCardIndex = -1;
+         
+                     if (data.data && data.data.length > 0) {
+                         data.data.forEach((card, index) => {
+                             const cardSlug = generateQueryString({
+                                 name: card.name,
+                                 type: card.type_line,
+                                 cmc: card.cmc
+                             });
+         
+                             // Create the details + summary structure for each card
+                             const detailsElement = document.createElement('details');
+                             const summaryElement = document.createElement('summary');
+                             summaryElement.innerHTML = `
+                                 <strong>${card.name}</strong> - ${card.mana_cost || 'None'} | ${card.type_line} | ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}
+                                 <a href="?${cardSlug}" target="_blank" style="float: right;">↗︎</a>
+                             `;
+         
                             // Full card details including format legality and Scryfall link
-                            const legalities = Object.keys(card.legalities)
-                                .filter(format => card.legalities[format] === 'legal')
-                                .map(format => format.toUpperCase().slice(0, 4)).join(', ') || 'None';
-
-                            detailsElement.innerHTML = `
-                                <summary></summary>
-                                <div class="full-card">
-                                    <strong>${card.name}</strong><br>
-                                    Type: ${card.type_line}<br>
-                                    Mana Cost: ${card.mana_cost || 'None'}<br>
-                                    Text: ${card.oracle_text || ''}<br>
-                                    Rarity: ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}<br>
-                                    Legal in: ${legalities}<br>
-                                    <a href="${card.scryfall_uri}" target="_blank">Scryfall ↗︎</a><br>
-                                    <button class="copy-button" id="copyPermalink-${index}">Copy Permalink</button>
-                                </div>
-                            `;
-
-                            // Insert the summary into the details element
-                            detailsElement.insertBefore(summaryElement, detailsElement.firstChild);
-
-                            // Append details element to the cardList
-                            cardList.appendChild(detailsElement);
-
-                            // Add event listener to close other details when one is opened
-                            detailsElement.addEventListener('toggle', function () {
-                                if (this.open) {
-                                    closeAllDetails(index); // Close others
-                                }
-                            });
-
-                            // Add event listener to the "Copy Permalink" button
-                            document.getElementById(`copyPermalink-${index}`).addEventListener('click', () => {
-                                const permalink = window.location.origin + window.location.pathname + '?' + cardSlug;
-                                copyToClipboard(permalink);
-                            });
-
-                            // Store details element for further reference
-                            detailsElements.push(detailsElement);
-                        });
-
-                        // Auto-expand if only one result
-                        if (data.data.length === 1) {
-                            detailsElements[0].open = true;
-                        }
-                    } else {
-                        cardList.innerHTML = '<li>No cards found.</li>';
-                    }
-
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    cardList.innerHTML = '<li>Error fetching cards. Please try again.</li>';
-                });
-        }
-
-        // Check for URL parameters and perform search if present
-        function checkForPermalink() {
-            const params = getURLParams();
-            if (params.name) {
-                performSearch(params); // Perform a search based on the query parameters
-            }
-        }
-
-        // Trigger search on Enter key press
-        searchInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                performSearch();
-            }
-        });
-
-        searchBtn.addEventListener('click', () => performSearch());
-
-        // Function to copy permalink to clipboard
-        function copyToClipboard(text) {
-            const tempInput = document.createElement('input');
-            tempInput.value = text;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            alert('Permalink copied to clipboard!');
-        }
-
-        // Function to handle keyboard navigation (Up/Down)
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'ArrowDown') {
-                if (selectedCardIndex < detailsElements.length - 1) {
-                    selectedCardIndex++;
-                }
-                highlightCard(selectedCardIndex);
-            } else if (e.key === 'ArrowUp') {
-                if (selectedCardIndex > 0) {
-                    selectedCardIndex--;
-                }
-                highlightCard(selectedCardIndex);
-            }
-        });
-
-        // Highlight the currently selected card
-        function highlightCard(index) {
-            detailsElements.forEach((details, idx) => {
-                details.classList.toggle('highlighted', idx === index);
-            });
-            if (index >= 0 && index < detailsElements.length) {
-                detailsElements[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-
-        // Check for permalink on page load
-        window.addEventListener('load', checkForPermalink);
-    </script>
-
-</body>
+         const legalities = Object.keys(card.legalities)
+         .filter(format => card.legalities[format] === 'legal')
+         .map(format => abbreviateFormat(format)).join(', ') || 'None';
+         
+         // Ensure only minimal info is displayed in <summary> (to avoid doubling)
+         detailsElement.innerHTML = `
+         <summary>${card.name} - ${card.mana_cost || 'None'} | ${card.type_line} | ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}
+         <a href="?${cardSlug}" target="_blank" style="float: right;">↗︎</a>
+         </summary>
+         <div class="details-content">
+         <strong>${card.name}</strong><br>
+         
+         Type: ${card.type_line}<br>
+         Mana Cost: ${card.mana_cost || 'None'}<br>
+         
+         Text: ${card.oracle_text ? card.oracle_text.replace(/\n/g, '<br>') : ''}<br>
+         
+         Rarity: ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}<br>
+         
+         Legal in: ${legalities}<br>
+         
+         <a href="${card.scryfall_uri}" target="_blank">Scryfall ↗︎</a><br>
+         <button class="copy-button" id="copyPermalink-${index}">Copy Permalink</button>
+         </div>
+         `;
+         
+                             // Append details element to the cardList
+                             cardList.appendChild(detailsElement);
+         
+                             // Add event listener to close other details when one is opened
+                             detailsElement.addEventListener('toggle', function () {
+                                 if (this.open) {
+                                     closeAllDetails(index); // Close others
+                                 }
+                             });
+         
+                             // Add event listener to the "Copy Permalink" button
+                             document.getElementById(`copyPermalink-${index}`).addEventListener('click', () => {
+                                 const permalink = window.location.origin + window.location.pathname + '?' + cardSlug;
+                                 copyToClipboard(permalink);
+                             });
+         
+                             // Store details element for further reference
+                             detailsElements.push(detailsElement);
+                         });
+         
+                         // Auto-expand if only one result
+                         if (data.data.length === 1) {
+                             detailsElements[0].open = true;
+                         }
+                     } else {
+                         cardList.innerHTML = '<li>No cards found.</li>';
+                     }
+         
+                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                 })
+                 .catch(error => {
+                     console.error('Error fetching data:', error);
+                     cardList.innerHTML = '<li>Error fetching cards. Please try again.</li>';
+                 });
+         }
+         
+         // Function to abbreviate format legality to 2-3 characters
+         function abbreviateFormat(format) {
+             const formatAbbreviations = {
+                 standard: 'STD',
+                 modern: 'MDN',
+                 legacy: 'LEG',
+                 vintage: 'VIN',
+                 commander: 'EDH',
+                 pioneer: 'PIO',
+                 pauper: 'PAU',
+                 brawl: 'BRL',
+                 historic: 'HIS',
+                 explorer: 'EXP',
+             };
+             return formatAbbreviations[format.toLowerCase()] || format.toUpperCase().slice(0, 2);
+         }
+         
+         // Check for URL parameters and perform search if present
+         function checkForPermalink() {
+             const params = getURLParams();
+             if (params.name) {
+                 performSearch(params); // Perform a search based on the query parameters
+             }
+         }
+         
+         // Trigger search on Enter key press
+         searchInput.addEventListener('keypress', function (e) {
+             if (e.key === 'Enter') {
+                 performSearch();
+             }
+         });
+         
+         searchBtn.addEventListener('click', () => performSearch());
+         
+         // Function to copy permalink to clipboard
+         function copyToClipboard(text) {
+             const tempInput = document.createElement('input');
+             tempInput.value = text;
+             document.body.appendChild(tempInput);
+             tempInput.select();
+             document.execCommand('copy');
+             document.body.removeChild(tempInput);
+             alert('Permalink copied to clipboard!');
+         }
+         
+         // Function to handle keyboard navigation (Up/Down)
+         document.addEventListener('keydown', function (e) {
+             if (e.key === 'ArrowDown') {
+                 if (selectedCardIndex < detailsElements.length - 1) {
+                     selectedCardIndex++;
+                 }
+                 highlightCard(selectedCardIndex);
+             } else if (e.key === 'ArrowUp') {
+                 if (selectedCardIndex > 0) {
+                     selectedCardIndex--;
+                 }
+                 highlightCard(selectedCardIndex);
+             }
+         });
+         
+         // Highlight the currently selected card
+         function highlightCard(index) {
+             detailsElements.forEach((details, idx) => {
+                 details.classList.toggle('highlighted', idx === index);
+             });
+             if (index >= 0 && index < detailsElements.length) {
+                 detailsElements[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+             }
+         }
+         
+         // Check for permalink on page load
+         window.addEventListener('load', checkForPermalink);
+      </script>
+   </body>
 </html>
