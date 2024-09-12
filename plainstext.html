@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>☼ Plainstext</title>
+
+    <!-- Minimal CSS Reset, Basic Styling -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Verdana, Geneva, sans-serif;
+            line-height: 1.5;
+            padding: 20px;
+            background-color: white;
+            color: black;
+        }
+        h1, label, button {
+            display: block;
+            margin-bottom: 10px;
+        }
+        button {
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        input {
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        ul {
+            list-style-type: none;
+            margin-top: 20px;
+        }
+        .card-preview {
+            margin-bottom: 5px;
+        }
+        a {
+            color: blue;
+            text-decoration: underline;
+        }
+        .full-card {
+            margin-top: 20px;
+            padding: 10px;
+            border-top: 1px solid black;
+        }
+        .copy-button {
+            padding: 5px;
+            margin-top: 10px;
+            display: block;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Scryfall Search (Brutalist Style)</h1>
+
+    <!-- Search form -->
+    <label for="search">Enter Search Query:</label>
+    <input type="text" id="search" placeholder="Search cards...">
+    <button id="searchBtn">Search</button>
+
+    <!-- Display results -->
+    <ul id="cardList"></ul>
+
+    <!-- Dedicated card view (rendered dynamically) -->
+    <div id="cardPage"></div>
+
+    <!-- Vanilla JS for routing and interaction -->
+    <script>
+        const searchBtn = document.getElementById('searchBtn');
+        const cardList = document.getElementById('cardList');
+        const cardPage = document.getElementById('cardPage');
+
+        // Helper function to generate slug from card name
+        function generateSlug(name) {
+            return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        }
+
+        // Search for cards
+        searchBtn.addEventListener('click', function() {
+            const query = document.getElementById('search').value;
+            if (!query) return;
+
+            // Fetch data from Scryfall API
+            fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    cardList.innerHTML = ''; // Clear previous results
+                    cardPage.innerHTML = ''; // Clear any card pages
+                    if (data.data) {
+                        data.data.forEach(card => {
+                            // Create a preview of the card name only
+                            const cardPreview = document.createElement('li');
+                            cardPreview.className = 'card-preview';
+                            const cardSlug = generateSlug(card.name);
+
+                            // Link to open the card's dedicated page
+                            cardPreview.innerHTML = `
+                                <a href="/#${cardSlug}" target="_blank">${card.name}</a>
+                            `;
+                            cardList.appendChild(cardPreview);
+                        });
+                    } else {
+                        cardList.innerHTML = '<li>No cards found.</li>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    cardList.innerHTML = '<li>Error fetching cards. Please try again.</li>';
+                });
+        });
+
+        // Function to copy permalink to clipboard
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('input');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('Permalink copied to clipboard!');
+        }
+
+        // Detect if the user is on a card page (using hash-based routing)
+        function checkForCardPage() {
+            const hash = window.location.hash.substring(1); // Get the slug from the URL
+            if (!hash) return;
+
+            // Search the card by its slug
+            fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(hash.replace(/-/g, ' '))}`)
+                .then(response => response.json())
+                .then(card => {
+                    cardPage.innerHTML = ''; // Clear previous content
+
+                    // Create full card details section
+                    const cardDetails = document.createElement('div');
+                    cardDetails.className = 'full-card';
+
+                    const legalities = Object.keys(card.legalities)
+                        .filter(format => card.legalities[format] === 'legal')
+                        .join(', ');
+
+                    const permalink = window.location.href;
+
+                    cardDetails.innerHTML = `
+                        <strong>${card.name}</strong><br>
+                        <hr>
+                        Type: ${card.type_line}<br>
+                        <hr>
+                        Mana Cost: ${card.mana_cost || 'None'}<br>
+                        <hr>
+                        ${card.oracle_text ? `Text: ${card.oracle_text}` : ''}
+                        <hr>
+                        <strong>Legal in:</strong> ${legalities || 'None'}<br>
+                        <hr>
+                        <button class="copy-button" id="copyPermalink">Copy Permalink</button>
+                    `;
+                    cardPage.appendChild(cardDetails);
+
+                    // Add event listener for permalink copy button
+                    document.getElementById('copyPermalink').addEventListener('click', () => {
+                        copyToClipboard(permalink);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    cardPage.innerHTML = '<p>Error loading card details. Please try again.</p>';
+                });
+        }
+
+        // Check for card page on load
+        window.addEventListener('load', checkForCardPage);
+        // Check if user navigates via hash change
+        window.addEventListener('hashchange', checkForCardPage);
+
+    </script>
+
+</body>
+</html>
