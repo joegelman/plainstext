@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plainstext Scryfall Search</title>
+    <title>☀︎ Plainstext – text-based MTG search</title>
 
     <!-- Basic Reset and Minimal Styling -->
     <style>
@@ -30,6 +30,7 @@
         input {
             margin-bottom: 10px;
             padding: 5px;
+            width: 100%;
         }
         ul {
             list-style-type: none;
@@ -37,14 +38,21 @@
         }
         .card-preview {
             margin-bottom: 5px;
-        }
-        a {
-            color: blue;
-            text-decoration: underline;
+            padding: 10px;
             cursor: pointer;
         }
+        .highlighted {
+            background-color: #d3d3d3;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        details {
+            margin-bottom: 10px;
+        }
         .full-card {
-            margin-top: 20px;
+            margin-top: 10px;
             padding: 10px;
             border-top: 1px solid black;
         }
@@ -58,7 +66,7 @@
 </head>
 <body>
 
-    <h1>Plainstext Scryfall Search</h1>
+    <h1>☀︎ Plainstext – text-based MTG search</h1>
 
     <!-- Search form -->
     <label for="search">Enter Search Query:</label>
@@ -67,24 +75,34 @@
 
     <!-- Display results -->
     <ul id="cardList"></ul>
-
-    <!-- Dedicated card view (rendered dynamically) -->
-    <div id="cardPage"></div>
-
+</hr>
+    <small>Built in NYC by <a href="https://www.joegelman.com" target="blank">Joe Gelman</a></small>
+    <small>Powered by <a href="https://www.scryfall.com" target="blank">Scryfall</a></small>
     <!-- Vanilla JS for Routing and Search -->
     <script>
         const searchBtn = document.getElementById('searchBtn');
+        const searchInput = document.getElementById('search');
         const cardList = document.getElementById('cardList');
-        const cardPage = document.getElementById('cardPage');
+        let selectedCardIndex = -1;
+        let detailsElements = []; // To store all open details
 
         // Helper function to generate slug from card name
         function generateSlug(name) {
             return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         }
 
+        // Close all open <details> elements except the one that is newly opened
+        function closeAllDetails(exceptIndex = null) {
+            detailsElements.forEach((details, index) => {
+                if (index !== exceptIndex) {
+                    details.open = false;
+                }
+            });
+        }
+
         // Search for cards
-        searchBtn.addEventListener('click', function() {
-            const query = document.getElementById('search').value;
+        function performSearch() {
+            const query = searchInput.value;
             if (!query) return;
 
             // Fetch data from Scryfall API
@@ -92,19 +110,57 @@
                 .then(response => response.json())
                 .then(data => {
                     cardList.innerHTML = ''; // Clear previous results
-                    cardPage.innerHTML = ''; // Clear any card pages
+                    detailsElements = []; // Clear previous details elements
+                    selectedCardIndex = -1;
+
                     if (data.data) {
-                        data.data.forEach(card => {
-                            // Create a preview of the card name only
-                            const cardPreview = document.createElement('li');
-                            cardPreview.className = 'card-preview';
+                        data.data.forEach((card, index) => {
                             const cardSlug = generateSlug(card.name);
 
-                            // Link to open the card's dedicated page using hash-based routing
-                            cardPreview.innerHTML = `
-                                <a href="#${cardSlug}">${card.name}</a>
+                            // Card shorthand set name
+                            const shorthandSet = card.set.toUpperCase();
+
+                            // Create the details + summary structure for each card
+                            const detailsElement = document.createElement('details');
+                            const summaryElement = document.createElement('summary');
+                            summaryElement.innerHTML = `
+                                <strong>${card.name}</strong> - ${card.mana_cost || 'None'} | ${card.type_line} | ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)} | Set: ${shorthandSet}
                             `;
-                            cardList.appendChild(cardPreview);
+
+                            // Full card details
+                            detailsElement.innerHTML = `
+                                <summary></summary>
+                                <div class="full-card">
+                                    <strong>${card.name}</strong><br>
+                                    Type: ${card.type_line}<br>
+                                    Mana Cost: ${card.mana_cost || 'None'}<br>
+                                    Text: ${card.oracle_text || ''}<br>
+                                    Rarity: ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}<br>
+                                    Set: ${shorthandSet}<br>
+                                    <button class="copy-button" id="copyPermalink-${index}">Copy Permalink</button>
+                                </div>
+                            `;
+
+                            // Insert the summary into the details element
+                            detailsElement.insertBefore(summaryElement, detailsElement.firstChild);
+
+                            // Append details element to the cardList
+                            cardList.appendChild(detailsElement);
+
+                            // Add event listener to close other details when one is opened
+                            detailsElement.addEventListener('toggle', function () {
+                                if (this.open) {
+                                    closeAllDetails(index); // Close others
+                                }
+                            });
+
+                            // Add event listener to the "Copy Permalink" button
+                            document.getElementById(`copyPermalink-${index}`).addEventListener('click', () => {
+                                copyToClipboard(window.location.href + '#' + cardSlug);
+                            });
+
+                            // Store details element for further reference
+                            detailsElements.push(detailsElement);
                         });
                     } else {
                         cardList.innerHTML = '<li>No cards found.</li>';
@@ -114,7 +170,16 @@
                     console.error('Error fetching data:', error);
                     cardList.innerHTML = '<li>Error fetching cards. Please try again.</li>';
                 });
+        }
+
+        // Trigger search on Enter key press
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
         });
+
+        searchBtn.addEventListener('click', performSearch);
 
         // Function to copy permalink to clipboard
         function copyToClipboard(text) {
@@ -127,61 +192,30 @@
             alert('Permalink copied to clipboard!');
         }
 
-        // Detect if the user is on a card page (using hash-based routing)
-        function checkForCardPage() {
-            const hash = window.location.hash.substring(1); // Get the slug from the URL
-            if (!hash) return;
+        // Function to handle keyboard navigation (Up/Down)
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowDown') {
+                if (selectedCardIndex < detailsElements.length - 1) {
+                    selectedCardIndex++;
+                }
+                highlightCard(selectedCardIndex);
+            } else if (e.key === 'ArrowUp') {
+                if (selectedCardIndex > 0) {
+                    selectedCardIndex--;
+                }
+                highlightCard(selectedCardIndex);
+            }
+        });
 
-            // Convert the slug back to the card name format for API request
-            const cardName = hash.replace(/-/g, ' ');
-
-            // Search the card by its name
-            fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}`)
-                .then(response => response.json())
-                .then(card => {
-                    cardPage.innerHTML = ''; // Clear previous content
-
-                    // Create full card details section
-                    const cardDetails = document.createElement('div');
-                    cardDetails.className = 'full-card';
-
-                    const legalities = Object.keys(card.legalities)
-                        .filter(format => card.legalities[format] === 'legal')
-                        .join(', ');
-
-                    const permalink = window.location.href;
-
-                    cardDetails.innerHTML = `
-                        <strong>${card.name}</strong><br>
-                        <hr>
-                        Type: ${card.type_line}<br>
-                        <hr>
-                        Mana Cost: ${card.mana_cost || 'None'}<br>
-                        <hr>
-                        ${card.oracle_text ? `Text: ${card.oracle_text}` : ''}
-                        <hr>
-                        <strong>Legal in:</strong> ${legalities || 'None'}<br>
-                        <hr>
-                        <button class="copy-button" id="copyPermalink">Copy Permalink</button>
-                    `;
-                    cardPage.appendChild(cardDetails);
-
-                    // Add event listener for permalink copy button
-                    document.getElementById('copyPermalink').addEventListener('click', () => {
-                        copyToClipboard(permalink);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    cardPage.innerHTML = '<p>Error loading card details. Please try again.</p>';
-                });
+        // Highlight the currently selected card
+        function highlightCard(index) {
+            detailsElements.forEach((details, idx) => {
+                details.classList.toggle('highlighted', idx === index);
+            });
+            if (index >= 0 && index < detailsElements.length) {
+                detailsElements[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
-
-        // Check for card page on load
-        window.addEventListener('load', checkForCardPage);
-        // Check if user navigates via hash change
-        window.addEventListener('hashchange', checkForCardPage);
-
     </script>
 
 </body>
