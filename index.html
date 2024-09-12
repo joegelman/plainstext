@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>☀︎ Plainstext – text-based MTG search</title>
+    <title>Plainstext Scryfall Search</title>
 
     <!-- Basic Reset and Minimal Styling -->
     <style>
@@ -26,7 +26,6 @@
         button {
             margin-top: 10px;
             cursor: pointer;
-            
         }
         input {
             margin-bottom: 10px;
@@ -38,14 +37,14 @@
             list-style-type: none;
             margin-top: 20px;
         }
-        #homelink {
-            text-decoration: none;
-            color: goldenrod;
-        }
         .card-preview {
             margin-bottom: 5px;
             padding: 10px;
             cursor: pointer;
+        }
+        #homelink {
+            text-decoration: none;
+            color: goldenrod;
         }
         .highlighted {
             background-color: #d3d3d3;
@@ -75,15 +74,13 @@
     <h1><a id="homelink" href="index.html">☀︎</a> Plainstext – text-based MTG search</h1>
 
     <!-- Search form -->
-    <label for="search">Enter Search Query:</label>
+    <label for="search">Search for cards:</label>
     <input type="text" id="search" placeholder="Search cards...">
     <button id="searchBtn">Search</button>
 
     <!-- Display results -->
     <ul id="cardList"></ul>
-</hr>
-    <small>Built in NYC by <a href="https://www.joegelman.com" target="blank">Joe Gelman</a></small>
-    <small>Powered by <a href="https://www.scryfall.com" target="blank">Scryfall</a></small>
+
     <!-- Vanilla JS for Routing and Search -->
     <script>
         const searchBtn = document.getElementById('searchBtn');
@@ -92,9 +89,24 @@
         let selectedCardIndex = -1;
         let detailsElements = []; // To store all open details
 
-        // Helper function to generate slug from card name
-        function generateSlug(name) {
-            return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        // Helper function to generate query string for permalink
+        function generateQueryString(params) {
+            return Object.keys(params)
+                .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+                .join('&');
+        }
+
+        // Function to get parameters from URL
+        function getURLParams() {
+            const params = {};
+            const search = window.location.search.substring(1);
+            if (search) {
+                search.split('&').forEach(param => {
+                    const [key, value] = param.split('=');
+                    params[decodeURIComponent(key)] = decodeURIComponent(value);
+                });
+            }
+            return params;
         }
 
         // Close all open <details> elements except the one that is newly opened
@@ -106,13 +118,20 @@
             });
         }
 
-        // Search for cards
-        function performSearch() {
-            const query = searchInput.value;
-            if (!query) return;
+        // Search for cards (with additional attributes like name, set, type, cmc)
+        function performSearch(query) {
+            // If no query passed, use search input value
+            const queryParams = query || { name: searchInput.value };
+            if (!queryParams.name) return;
+
+            // Construct the query string for Scryfall search API
+            let scryfallQuery = queryParams.name;
+            if (queryParams.type) scryfallQuery += ` t:${queryParams.type}`;
+            if (queryParams.set) scryfallQuery += ` e:${queryParams.set}`;
+            if (queryParams.cmc) scryfallQuery += ` cmc=${queryParams.cmc}`;
 
             // Fetch data from Scryfall API
-            fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}`)
+            fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(scryfallQuery)}`)
                 .then(response => response.json())
                 .then(data => {
                     cardList.innerHTML = ''; // Clear previous results
@@ -121,7 +140,12 @@
 
                     if (data.data) {
                         data.data.forEach((card, index) => {
-                            const cardSlug = generateSlug(card.name);
+                            const cardSlug = generateQueryString({
+                                name: card.name,
+                                type: card.type_line,
+                                set: card.set,
+                                cmc: card.cmc
+                            });
 
                             // Card shorthand set name
                             const shorthandSet = card.set.toUpperCase();
@@ -162,7 +186,8 @@
 
                             // Add event listener to the "Copy Permalink" button
                             document.getElementById(`copyPermalink-${index}`).addEventListener('click', () => {
-                                copyToClipboard(window.location.href + '#' + cardSlug);
+                                const permalink = window.location.origin + window.location.pathname + '?' + cardSlug;
+                                copyToClipboard(permalink);
                             });
 
                             // Store details element for further reference
@@ -178,6 +203,14 @@
                 });
         }
 
+        // Check for URL parameters and perform search if present
+        function checkForPermalink() {
+            const params = getURLParams();
+            if (params.name) {
+                performSearch(params); // Perform a search based on the query parameters
+            }
+        }
+
         // Trigger search on Enter key press
         searchInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
@@ -185,7 +218,7 @@
             }
         });
 
-        searchBtn.addEventListener('click', performSearch);
+        searchBtn.addEventListener('click', () => performSearch());
 
         // Function to copy permalink to clipboard
         function copyToClipboard(text) {
@@ -222,6 +255,9 @@
                 detailsElements[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
+
+        // Check for permalink on page load
+        window.addEventListener('load', checkForPermalink);
     </script>
 
 </body>
