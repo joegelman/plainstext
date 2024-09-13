@@ -43,10 +43,22 @@
             list-style-type: none;
             margin-top: 20px;
         }
+
+        .detail-label {
+            display: block;
+            width: fit-content;
+            margin: 13px 0 3px 0;
+            text-transform: uppercase;
+            padding: 2px 4px;
+            background-color: #ebebeb;
+            border-radius: 2px;
+            
+        }
         .card-preview {
             margin-bottom: 5px;
             padding: 10px;
             cursor: pointer;
+            max-width: 100%;
         }
         h1 {
             margin-bottom: 0;
@@ -62,9 +74,15 @@
         summary {
             cursor: pointer;
             font-weight: regular;
+            max-width: 100%;
+            white-space: nowrap;        
+            overflow: hidden;          
+            text-overflow: ellipsis;    
+            display: block;               
         }
         details {
             margin-bottom: 10px;
+            max-width: 100%;
         }
         .full-card {
             margin-top: 10px;
@@ -72,10 +90,12 @@
             border-top: 1px solid black;
             white-space: pre-wrap; /* Preserve line breaks and white spaces */
             word-wrap: break-word; /* Prevent long unbroken words from causing layout issues */
+            max-width: 40ch;
         }
         .details-content {
             margin-top: 10px;
             font-size: 0.9em;
+            max-width: 50ch;
         }
         .copy-button {
             padding: 5px;
@@ -125,6 +145,11 @@
         }
         #footer {
             margin-top: .5rem;
+        }
+        #clip {
+            width: 40ch;
+            max-width: 90%;
+            margin: 6px 0 12px 0;
         }
 
     </style>
@@ -241,10 +266,6 @@
                         // Create the details + summary structure for each card
                         const detailsElement = document.createElement('details');
                         const summaryElement = document.createElement('summary');
-                        summaryElement.innerHTML = `
-                            <strong>${card.name}</strong> - ${card.mana_cost || 'None'} | ${card.type_line} | ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}
-                            <a href="?${cardSlug}" target="_blank" style="float: right;">↗︎</a>
-                        `;
 
                         // Full card details including format legality and Scryfall link
                         const legalities = Object.keys(card.legalities)
@@ -253,20 +274,19 @@
 
                             detailsElement.innerHTML = `
     <summary>${card.name} - ${card.mana_cost || 'None'} | ${card.type_line} | ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}
-    <a href="?${cardSlug}" target="_blank" style="float: right;">↗︎</a>
     </summary>
     <div class="details-content">
     <strong>${card.name}</strong><br>
     
-    Type: ${card.type_line}<br>
-    Mana Cost: ${card.mana_cost || 'None'}<br>
+    <small class="detail-label">Type:</small> ${card.type_line}<br>
+    <small class="detail-label">Mana Cost:</small> ${card.mana_cost || 'None'}<br>
     
-    Text: ${card.oracle_text ? card.oracle_text.replace(/\n/g, '<br>') : ''}<br>
+    <small class="detail-label">Text:</small>  ${card.oracle_text ? card.oracle_text.replace(/\n/g, '<br>') : ''}<br>
     
-    Rarity: ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}<br>
+    <small class="detail-label">Rarity:</small>  ${card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1)}<br>
     
-    Legal in: ${legalities}<br>
-    
+    <small class="detail-label">Legal in:</small>  ${legalities}<br>
+    <hr id="clip">
     <a href="${card.scryfall_uri}" target="_blank">Scryfall ↗︎</a> | 
     <a href="?${cardSlug}" target="_blank">Plainstext ↗︎</a><br>
     
