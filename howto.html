@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plainstext - Basic Scryfall Search Syntax</title>
+    <title>Plainstext – MTG Search Syntax</title>
     <style>
         * {
             margin: 0;
@@ -24,6 +24,7 @@
             display: block;
             margin: 10px 0;
             border-left: 4px solid #ccc;
+            width: fit-content;
         }
         label, button {
             display: block;
@@ -55,60 +56,84 @@
         #footer {
             margin-top: 3rem;
         }
+        .spacer {
+            margin-block: 3em;
+            color: white;
+        }
+        p {
+            max-width: 80ch;
+        }
+        .page-start {
+            margin-top: 2em;
+        }
+
+        .fun-examples {
+            margin: 6px 0;
+            font-size: .85rem;
+        }
+        .fun-examples{
+            margin: 6px 0;
+            font-size: .85rem;
+        }
     </style>
 </head>
 <body>
 
 <h1><a id="homelink" alt="plain-text mtg search" href="index.html">☀︎</a> Plainstext</h1>
-<small id="desc">basic scryfall search syntax</small>
+<small id="desc">plain-text mtg search</small>
 
 <!-- Content -->
-<h2>Basics of Searching</h2>
-<p>Here are some basic ways you can search for cards on Plainstext using simple queries. Below are a few key search fields and examples.</p>
-
+<h2 class="page-start">Basics of Searching</h2>
+<p>Here are some basic ways you can search for cards on Plainstext using simple queries. Below are a few key search fields and examples, including abbreviated versions for even faster searching.</p>
+<span class="spacer">.</span>
 <h3>Search by Card Name</h3>
 <p>Just type the name of the card to search for it:</p>
 <code>name:"Llanowar Elves"</code>
 <code>name:"Lightning Bolt"</code>
-
+<span class="spacer">.</span>
 <h3>Search by Mana Cost</h3>
 <p>Filter by specific mana costs using the mana symbols in curly braces:</p>
 <code>mana={G}</code> <!-- Green mana -->
-<code>mana={1}{W}</code> <!-- 1 colorless and 1 white mana -->
-
+<code>m:{G}</code> <!-- 1 colorless and 1 white mana -->
+<span class="spacer">.</span>
+<h3>Search by Converted Mana Cost</h3>
+<p>Look for cards with total mana cost (mana value), using CMC:</p>
+<code>mana value=3</code> 
+<code>cmc=3</code> 
+<span class="spacer">.</span>
 <h3>Search by Type</h3>
 <p>Search for cards by their type. You can use full types like "Creature," or more specific subtypes:</p>
 <code>type:Creature</code>
-<code>type:"Elf Druid"</code>
-
+<code>t:"Elf Druid"</code>
+<span class="spacer">.</span>
 <h3>Search by Rarity</h3>
 <p>Find cards by their rarity level:</p>
 <code>rarity:common</code>
-<code>rarity:rare</code>
-
+<code>r:c</code>
+<span class="spacer">.</span>
 <h3>Search by Set</h3>
 <p>Find cards in a specific set by using the set code:</p>
 <code>set:lea</code> <!-- Limited Edition Alpha -->
 <code>set:m21</code> <!-- Core Set 2021 -->
-
+<span class="spacer">.</span>
 <h3>Search by Color</h3>
 <p>You can search by card colors. Use the color abbreviations: W (white), U (blue), B (black), R (red), G (green):</p>
 <code>color:red</code>
-<code>color:white</code>
-
+<code>c:r</code>
+<span class="spacer">.</span>
 <h3>Combined Search Examples</h3>
 <p>You can combine multiple queries to narrow your results:</p>
 <code>name:"Savannah Lions" type:Creature</code>
 <code>mana={B} type:Creature rarity:common</code>
 
 <!-- Fun sample queries -->
-<h2>Fun Sample Queries</h2>
-<ul>
-    <li><a href="?cmc<3 type:instant color:red" target="_blank">Burn spells under 3 CMC</a></li>
-    <li><a href="?mana={B} type:creature rarity:common" target="_blank">Common Black Creatures</a></li>
-    <li><a href="?set:m21 rarity:rare" target="_blank">Rare cards from M21</a></li>
-    <li><a href="?name:lightning color:red" target="_blank">Red cards with "Lightning" in the name</a></li>
-</ul>
+<h2>BONUS: Fun Sample Queries</h2>
+
+    <div class="fun-examples"></span><a href="plainstext.com/index.html?cmc<3 type:instant color:red" target="_blank">Burn spells under 3 CMC</a></div>
+    <div class="fun-examples"></span><a href="plainstext.com/index.html?mana={B} type:creature rarity:common" target="_blank">Common Black Creatures</a></div>
+    <div class="fun-examples"></span><a href="plainstext.com/index.html?set:m21 rarity:rare" target="_blank">Rare cards from M21</a></div>
+    <div class="fun-examples"></span><a href="plainstext.com/index.html?name:lightning color:red" target="_blank">Red cards with "Lightning" in the name</a></div>
+
 
 <div id="footer">
     <small>Built in NYC by <a href="https://www.joegelman.com" target="_blank">Joe Gelman</a></small>
