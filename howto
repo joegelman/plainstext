@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plainstext - Basic Scryfall Search Syntax</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Verdana, Geneva, sans-serif;
+            line-height: 1.5;
+            padding: 20px;
+            background-color: white;
+            color: black;
+            max-width: 100%;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 5px;
+            display: block;
+            margin: 10px 0;
+            border-left: 4px solid #ccc;
+        }
+        label, button {
+            display: block;
+            margin-bottom: 10px;
+        }
+        h1 {
+            margin-bottom: 0;
+            margin-block-end: -0.6rem;
+        }
+        #homelink {
+            text-decoration: none;
+            color: goldenrod;
+        }
+        #desc {
+            margin-top: 0;
+            margin-left: 2.9rem;
+            font-style: italic;
+            color: #999;
+            line-height: 1;
+            margin-bottom: 2rem;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        ul li {
+            margin-bottom: 10px;
+        }
+        #footer {
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+
+<h1><a id="homelink" alt="plain-text mtg search" href="index.html">☀︎</a> Plainstext</h1>
+<small id="desc">basic scryfall search syntax</small>
+
+<!-- Content -->
+<h2>Basics of Searching</h2>
+<p>Here are some basic ways you can search for cards on Plainstext using simple queries. Below are a few key search fields and examples.</p>
+
+<h3>Search by Card Name</h3>
+<p>Just type the name of the card to search for it:</p>
+<code>name:"Llanowar Elves"</code>
+<code>name:"Lightning Bolt"</code>
+
+<h3>Search by Mana Cost</h3>
+<p>Filter by specific mana costs using the mana symbols in curly braces:</p>
+<code>mana={G}</code> <!-- Green mana -->
+<code>mana={1}{W}</code> <!-- 1 colorless and 1 white mana -->
+
+<h3>Search by Type</h3>
+<p>Search for cards by their type. You can use full types like "Creature," or more specific subtypes:</p>
+<code>type:Creature</code>
+<code>type:"Elf Druid"</code>
+
+<h3>Search by Rarity</h3>
+<p>Find cards by their rarity level:</p>
+<code>rarity:common</code>
+<code>rarity:rare</code>
+
+<h3>Search by Set</h3>
+<p>Find cards in a specific set by using the set code:</p>
+<code>set:lea</code> <!-- Limited Edition Alpha -->
+<code>set:m21</code> <!-- Core Set 2021 -->
+
+<h3>Search by Color</h3>
+<p>You can search by card colors. Use the color abbreviations: W (white), U (blue), B (black), R (red), G (green):</p>
+<code>color:red</code>
+<code>color:white</code>
+
+<h3>Combined Search Examples</h3>
+<p>You can combine multiple queries to narrow your results:</p>
+<code>name:"Savannah Lions" type:Creature</code>
+<code>mana={B} type:Creature rarity:common</code>
+
+<!-- Fun sample queries -->
+<h2>Fun Sample Queries</h2>
+<ul>
+    <li><a href="?cmc<3 type:instant color:red" target="_blank">Burn spells under 3 CMC</a></li>
+    <li><a href="?mana={B} type:creature rarity:common" target="_blank">Common Black Creatures</a></li>
+    <li><a href="?set:m21 rarity:rare" target="_blank">Rare cards from M21</a></li>
+    <li><a href="?name:lightning color:red" target="_blank">Red cards with "Lightning" in the name</a></li>
+</ul>
+
+<div id="footer">
+    <small>Built in NYC by <a href="https://www.joegelman.com" target="_blank">Joe Gelman</a></small>
+    <small>Powered by <a href="https://www.scryfall.com" target="_blank">Scryfall</a></small>
+</div>
+
+</body>
+</html>
