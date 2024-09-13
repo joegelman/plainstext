@@ -71,10 +71,7 @@
             margin: 6px 0;
             font-size: .85rem;
         }
-        .fun-examples{
-            margin: 6px 0;
-            font-size: .85rem;
-        }
+
     </style>
 </head>
 <body>
@@ -127,18 +124,52 @@
 <code>mana={B} type:Creature rarity:common</code>
 
 <!-- Fun sample queries -->
-<h2>BONUS: Fun Sample Queries</h2>
-
-    <div class="fun-examples"></span><a href="/index.html?cmc<3 type:instant color:red" target="_blank">Burn spells under 3 CMC</a></div>
-    <div class="fun-examples"></span><a href="/index.html?mana={B} type:creature rarity:common" target="_blank">Common Black Creatures</a></div>
-    <div class="fun-examples"></span><a href="/index.html?set:m21 rarity:rare" target="_blank">Rare cards from M21</a></div>
-    <div class="fun-examples"></span><a href="/index.html?name:lightning color:red" target="_blank">Red cards with "Lightning" in the name</a></div>
-
+<h2>Fun Sample Queries</h2>
+<ul>
+    <span class="fun-examples">
+        Burn spells under 3 CMC:
+        <code>cmc<3 type:instant color:red</code>
+        <button class="copy-btn" onclick="copyQuery('cmc<3 type:instant color:red')">Copy Query</button>
+        <a class="back-to-search" href="index.html">Back to Search</a>
+    </span>
+    <span class="fun-examples">
+        Common Black Creatures:
+        <code>mana={B} type:creature rarity:common</code>
+        <button class="copy-btn" onclick="copyQuery('mana={B} type:creature rarity:common')">Copy Query</button>
+        <a class="back-to-search" href="index.html">Back to Search</a>
+    </span>
+    <span class="fun-examples">
+        Rare cards from M21:
+        <code>set:m21 rarity:rare</code>
+        <button class="copy-btn" onclick="copyQuery('set:m21 rarity:rare')">Copy Query</button>
+        <a class="back-to-search" href="index.html">Back to Search</a>
+    </span>
+    <span class="fun-examples">
+        Red cards with "Lightning" in the name:
+        <code>name:lightning color:red</code>
+        <button class="copy-btn" onclick="copyQuery('name:lightning color:red')">Copy Query</button>
+        <a class="back-to-search" href="index.html">Back to Search</a>
+    </span>
+</ul>
 
 <div id="footer">
     <small>Built in NYC by <a href="https://www.joegelman.com" target="_blank">Joe Gelman</a></small>
     <small>Powered by <a href="https://www.scryfall.com" target="_blank">Scryfall</a></small>
 </div>
+
+<script>
+    function copyQuery(query) {
+        // Create a temporary textarea to hold the query
+        const tempInput = document.createElement('textarea');
+        tempInput.value = query;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        alert('Query copied to clipboard!');
+    }
+</script>
+
 
 </body>
 </html>
